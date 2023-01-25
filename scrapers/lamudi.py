@@ -84,25 +84,26 @@ def scrape(content):
     # Generate soup
     soup = BeautifulSoup(content, 'html.parser')
     # Get Characteristics
-    for d in soup.find_all(class_="ListingCell-AllInfo"):
+    for element in soup.find_all(class_="ListingCell-AllInfo"):
         temp_dict = {}
         try:
-            temp_dict['name'] = d.find(class_="ListingCell-KeyInfo-title").text.strip()
-            temp_dict['description'] = d.find(class_="ListingCell-shortDescription").text.strip()
-            temp_dict['location'] = ' '.join([j.strip() for j in d.find(class_="ListingCell-KeyInfo-address").text.strip().split('\n')])
-            temp_dict['link'] = d.find(class_="ListingCell-KeyInfo-title").find('a').get('href')
-            temp_dict['price'] = d.find(class_="PriceSection-FirstPrice").text.strip()
+            breakpoint()
+            temp_dict['name'] = element.find(class_="ListingCell-KeyInfo-title").text.strip()
+            temp_dict['description'] = element.find(class_="ListingCell-shortDescription").text.strip()
+            temp_dict['location'] = ' '.join([j.strip() for j in element.find(class_="ListingCell-KeyInfo-address").text.strip().split('\n')])
+            temp_dict['link'] = element.find('a').get('href')
+            temp_dict['price'] = element.find(class_="PriceSection-FirstPrice").text.strip()
             temp_dict['operation'] = _operation
-            for att in d.find(class_="KeyInformation").find_all(class_="KeyInformation-attribute"):
-                att = att.text.lower()
-                if 'recámara' in att:
-                    temp_dict['rooms'] = statistics.mean([int(s) for s in att.split() if s.isdigit()])
-                elif 'baño' in att:
-                    temp_dict['bathrooms'] = statistics.mean([int(s) for s in att.split() if s.isdigit()])
-                elif 'terreno' in att:
-                    temp_dict['terrain (m2)'] = statistics.mean([int(s) for s in att.split() if s.isdigit()])
-                elif 'superficie' in att:
-                    temp_dict['construction (m2)'] = statistics.mean([int(s) for s in att.split() if s.isdigit()])
+            for attribute in element.find(class_="KeyInformation_v2").find_all(class_="KeyInformation-attribute_v2"):
+                text_attribute = attribute.text.lower()
+                if 'recámaras' in text_attribute:
+                    temp_dict['rooms'] = statistics.mean([int(s) for s in text_attribute.split() if s.isdigit()])
+                elif 'baños' in text_attribute:
+                    temp_dict['bathrooms'] = statistics.mean([int(s) for s in text_attribute.split() if s.isdigit()])
+                elif 'terreno' in text_attribute:
+                    temp_dict['terrain (m2)'] = statistics.mean([int(s) for s in text_attribute.split() if s.isdigit()])
+                elif 'construidos' in text_attribute:
+                    temp_dict['construction (m2)'] = statistics.mean([int(s) for s in text_attribute.split() if s.isdigit()])
         except Exception as e:
             print(e)
             continue
