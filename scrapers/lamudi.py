@@ -1,6 +1,6 @@
 """
 Module to scrape Lamudi
-and stores data in local storage as CSV.
+and stores data in local storage as XLSX.
 
 Fetched Fields:
 name, description, location, link, price, operation, rooms, bathrooms, construction (m2), terrain (m2)
@@ -67,6 +67,22 @@ class Scraper(BaseScraper):
         'terrain (m2)': {
             'resolve_element': lambda element: element,
             'attribute': 'data-land_size'
+        },
+        'sku': {
+            'resolve_element': lambda element: element,
+            'attribute': 'data-sku'
+        },
+        'agent_name': {
+            'resolve_element': lambda element: element.find(class_="ListingDetail-agent-name"),
+            'attribute': 'text'
+        },
+        'agent_link': {
+            'resolve_element': lambda element: element.find(class_="ListingDetail-agentDetail-agentLink"),
+            'attribute': 'href'
+        },
+        'agent_id': {
+            'resolve_element': lambda element: element.find(class_="ListingCell-contactAgent-button"),
+            'attribute': 'data-agent-id'
         }
     }
 
