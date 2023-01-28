@@ -1,3 +1,10 @@
 pandas==1.5.3
+
+# Clien HTTP
 requests==2.28.2
+
+# HTML parser
 beautifulsoup4==4.6.0
+
+# Handlers xlsx
+openpyxl==3.0.10
