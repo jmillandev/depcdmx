@@ -12,8 +12,12 @@ class HttpClient:
         'Pragma': 'no-cache',
     }
 
-    def make(self, action, url):
-        seconds = random.randint(5, 10)
+    def make(self, action, url, headers={}, raise_error=True, **kwargs):
+        seconds = random.randint(5, 7)
         print(f"Waiting {seconds} seg to execute: {action.upper()} {url}")
-        time.sleep(1)
-        return getattr(requests, action)(url, headers=self.HEADERS)
+        time.sleep(seconds)
+        headers.update(self.HEADERS)
+        response = getattr(requests, action)(url, headers=headers, **kwargs)
+        if raise_error:
+            response.raise_for_status()
+        return response

@@ -19,7 +19,6 @@ class Scraper:
     def __init__(self, content):
         self.parser = BeautifulSoup(content, 'html.parser')
         self.data_list = []
-        self.data_frame = pd.DataFrame(columns=self.FIELDS.keys())
 
     def get_value(self, element, attribute):
         try:
@@ -29,6 +28,9 @@ class Scraper:
             return element.get(attribute).strip()
         except AttributeError:
             return None
+
+    def resolve_extrafields(self, temp_data):
+        pass
 
     def run(self):
         for element in self.parser.find_all(class_="ListingCell-AllInfo"):
@@ -44,7 +46,9 @@ class Scraper:
                 print(traceback.format_exc())
                 print("ERROR ---- END")
                 continue
+
+            self.resolve_extrafields(temp_data)
             self.data_list.append(temp_data)
 
-        print(f"Found {self.data_frame.size} depts")
+        print(f"Found {len(self.data_list)} depts")
         return pd.DataFrame(self.data_list)
