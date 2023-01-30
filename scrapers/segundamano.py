@@ -91,6 +91,6 @@ if __name__ == '__main__':
     Entrypoint(
         'ciudad-de-mexico',
         'renta',
-        'https://www.segundamano.mx/anuncios/{state}/{operation}-inmuebles?orden=date&page={page_number}',
+        'https://www.segundamano.mx/anuncios/{state}/{operation}-inmuebles?orden=date&pagina={page_number}',
         Scraper
     ).start()
