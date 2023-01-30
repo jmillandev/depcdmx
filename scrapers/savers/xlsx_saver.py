@@ -11,15 +11,16 @@ class XlsxSaver:
         self.file_name = f"{self.folter_name}/{base_name}-{state}-{operation}.xlsx"
         self._df = None
 
-    def save(self, buildings_data):
+    def save(self, buildings_data: list):
         """ Append page data
 
             Params:
             -----
-            buildings_data : pd.Dataframe()
+            buildings_data : list
                 Dataframe of Departments
         """
         self.create_folder()
+        buildings_data = pd.DataFrame(buildings_data)
         print(buildings_data.head(1).to_dict())
         try:
             df = pd.concat([self.df, buildings_data])
@@ -41,7 +42,7 @@ class XlsxSaver:
 
     @property
     def df(self):
-        if self._df:
+        if self._df is not None:
             return self._df
 
         try:

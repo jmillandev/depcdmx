@@ -1,20 +1,19 @@
-import pandas as pd
 from bs4 import BeautifulSoup
 import traceback
 
 class Scraper:
 
-    # FIELDS example TODO: Create a json or yml base
-    # FIELDS = {
-    #     'name': {
-    #         'resolve_element': lambda element: element.find(class_="ListingCell-KeyInfo-title"),
-    #         'attribute': 'text'
-    #     },
-    #     'price': {
-    #         'resolve_element': lambda element: element,
-    #         'attribute': 'data-price'
-    #     }
-    # }
+    FIELDS = {
+        'name': {
+            'resolve_element': lambda element: element.find(class_="ListingCell-KeyInfo-title"),
+            'attribute': 'text'
+        },
+        'price': {
+            'resolve_element': lambda element: element,
+            'attribute': 'data-price'
+        }
+    }
+    CARD_CLASS = "ListingCell-AllInfo"
 
     def __init__(self, content):
         self.parser = BeautifulSoup(content, 'html.parser')
@@ -32,8 +31,8 @@ class Scraper:
     def resolve_extrafields(self, temp_data):
         pass
 
-    def run(self):
-        for element in self.parser.find_all(class_="ListingCell-AllInfo"):
+    def run(self) -> list:
+        for element in self.parser.find_all(class_=self.CARD_CLASS):
             temp_data = {}
             try:
                 for field, resolver in self.FIELDS.items():
@@ -51,4 +50,4 @@ class Scraper:
             self.data_list.append(temp_data)
 
         print(f"Found {len(self.data_list)} depts")
-        return pd.DataFrame(self.data_list)
+        return self.data_list

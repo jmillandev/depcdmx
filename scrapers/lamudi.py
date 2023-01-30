@@ -6,11 +6,11 @@ Fetched Fields:
 name, description, location, link, price, operation, rooms, bathrooms, construction (m2), terrain (m2)
 """
 from clients.http_client import HttpClient
-from savers.xlsx_saver import XlsxSaver
 from base import Scraper as BaseScraper
 from random import random, choice
 from math import trunc
 from requests.exceptions import HTTPError
+from application import Entrypoint
 
 
 class Scraper(BaseScraper):
@@ -103,40 +103,15 @@ class Scraper(BaseScraper):
         except HTTPError:
             return { 'phone_number': None, 'mobile_number': None, 'office_phone': None }
         return {
-            'phone_number': json_response['phone_number'],
-            'mobile_number': json_response['mobilePhone'],
-            'office_phone': json_response['officePhone']
+            'phone_number': json_response.get('phone_number'),
+            'mobile_number': json_response.get('mobilePhone'),
+            'office_phone': json_response.get('officePhone')
         }
 
-def start():
-    """ Loop over pages to retrieve all info available
-    """
-    state = 'nuevo-leon'
-    operation = 'sale'
-    base_url = f"https://www.lamudi.com.mx/{state}/for-{operation}/?page=" + '{}'
-    page_number = 1
-    while True:
-        try:
-            response = HttpClient().make('get', base_url.format(page_number))
-        except HTTPError:
-            print("Wrong Response!")
-            break
-
-        departeres = Scraper(response.content).run()
-        if departeres.empty:
-            print("No more departments")
-            break
-
-        XlsxSaver('lamudi', state, operation).save(departeres)
-        page_number += 1
-
-
-def main():
-    """ Main method """
-    print('Starting to scrape Lamudi')
-    start()
-    print('Done')
-
-
 if __name__ == '__main__':
-    main()
+    Entrypoint(
+        'distrito-federal',
+        'rent',
+        'https://www.lamudi.com.mx/{state}/for-{operation}/?sorting=newest&page={page_number}',
+        Scraper
+    ).start()

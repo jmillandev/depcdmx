@@ -1,109 +1,91 @@
 """
 Module to scrape Segunda Mano DF appartments
-and stores data in local storage as CSV.
+and stores data in local storage as XLSX.
 """
-import requests
-import pandas as pd
-from pprint import pprint as pp
-from bs4 import BeautifulSoup
+from application import Entrypoint
+from re import search
+from requests.exceptions import HTTPError
+from clients.http_client import HttpClient
+import json
 
 
-# Vars
-_base_url = "https://www.segundamano.mx/anuncios/ciudad-de-mexico/venta-inmuebles?page={}"
-user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.62 Safari/537.36"
-ddir='data/'
+class Scraper:
+    ID_REGEX = r'(?P<id>\d+)$'
 
-def save(depts):
-    """ Append page data
+    FIELDS = {
+        'description': 'body',
+        'price': 'list_price.price_value',
+        'link': 'share_link',
+        'title': 'subject',
+        'agent_name': 'user.account.name',
+        'agent_id': 'user.account.user_uuid',
+        'category': 'estate_type.single.label',
+        'posted_on': 'list_time.label',
+        'company_ad': 'company_ad',
+        'paid': 'paid',
+        'bathrooms': 'ad_details.bathrooms.single.label',
+        'terrain (m2)': 'ad_details.lot_area.single.label',
+        'construction (m2)': 'ad_details.size.single.label',
+        'rooms': 'ad_details.rooms.single.label',
+        'garage': 'ad_details.parking_lots.single.label',
+    }
 
-        Params:
-        -----
-        depts : list
-            List of Departments
-    """
-    # Read Existant file to append
-    _fname = ddir+"{}/segundamano.csv".format(dt.date.today().isoformat())
-    try:
-        df = pd.read_csv(_fname, delimiter='~')
-    except:
-        print('New file, creating folder..')
+    def __init__(self, content: str):
+        self.content = content
+
+    def resolve_value(self, item, path):
+        for key in path.split('.'):
+            if not item:
+                return None
+            item = item.get(key, None)
+        return item
+    
+    def build_location(self, data):
+        location = ''
+        data = data.get('locations', None)
+        while data:
+            data = data[0]
+            location += ' - ' + data['label']
+            data = data.get('locations', None)
+        return location
+
+    def resolve_phones(self, id):
+        url = f"https://webapi.segundamano.mx/nga/api/v1/public/klfst/{id}/phone"
         try:
-            os.mkdir(ddir+'{}'.format(dt.date.today().isoformat()))
-            print('Created folder!')
-        except:
-            print('Folder exists already!')
-        df = pd.DataFrame()
-    # Append data
-    depdf = pd.DataFrame(depts)
-    print(depdf.head(1).to_dict())
-    try:
-        if df.empty:
-            depdf.set_index(['name','location']).to_csv(_fname, sep='~')
-            print('Correctly saved file: {}'.format(_fname))
-        else:
-            df = pd.concat([df, depdf])
-            df.set_index(['name','location']).to_csv(_fname, sep='~')
-            print('Correctly saved file: {}'.format(_fname))
-    except Exception as e:
-        print(e)
-        print('Could not save file: {}'.format(_fname))
+            json_response = HttpClient().make('get', url).json()
+        except HTTPError:
+            return None
+        return json_response['phones'][0]['value']
+
+    def resolve_item(self, raw_item):
+        item = {}
+        for field, path in self.FIELDS.items():
+            item[field] = self.resolve_value(raw_item['ad'], path)
+
+        item['id'] = search(self.ID_REGEX, item['link']).group('id')
+        item['location'] = self.build_location(raw_item['ad'])
+        item['phone'] = self.resolve_phones(item['id'])
+
+    def run(self)-> list:
+        return [self.resolve_item(raw_item) for raw_item in self.raw_items()['list_ads']]
+
+    def raw_items(self):
+        for line in self.content.split('\n'):
+            if 'initialAds' in line:
+                string = line[:-1].removeprefix('var initialAds="').replace('\\"', '"').replace('\\"', "'")
+                with open('data/segundamano.json', 'w') as f:
+                    f.write(string)
+                return json.loads(string)
+        with open('data/segundamano.html', 'w') as f:
+            breakpoint()
+            f.write(self.content)
+        raise Exception('Invalid html')
 
 
-def scrape(content):
-    """ Scrape all departments per page
-    """
-    data = []
-    # Generate soup
-    soup = BeautifulSoup(content, 'html.parser')
-    with open(ddir+'segundamano.html', 'w') as _F:
-        _F.write(soup.prettify())
-    # Get Characteristics
-    for d in soup.find_all(class_="ad"):
-        print('----')
-        try:
-            print(d) 
-        except Exception as e:
-            print(e)
-            continue
-        break
-    print('Found {} depts'.format(len(data)))
-    return data
-
-def paginate():
-    """ Loop over pages to retrieve all info available
-
-        Returns:
-        -----
-        pg_nums : int
-            Number of pages scraped
-    """
-    pg_nums = 1
-    while True:
-        try:
-            print(_base_url.format(pg_nums))
-            r = requests.get(_base_url.format(pg_nums),
-                headers={'user-agent': user_agent})
-            if r.status_code != 200:
-                raise Exception("Wrong Response")
-            depts = scrape(r.content)
-            if not depts:
-                raise Exception("No more departments")
-        except Exception as e:
-            print(e)
-            print('Finishing to retrieve info.')
-            break
-        # Store values
-        #save(depts)
-        pg_nums += 1
-        break ###
-    return pg_nums
-
-def main():
-    """ Main method
-    """
-    print('Starting to scrape Inmuebles24')
-    pages = paginate()
-
-
-if __name__ == '__main__':
-    main()
+if __name__ == '__main__':    
+    Entrypoint(
+        'ciudad-de-mexico',
+        'venta',
+        'https://www.segundamano.mx/anuncios/{state}/{operation}-inmuebles?page={page_number}',
+        Scraper
+    ).start()
