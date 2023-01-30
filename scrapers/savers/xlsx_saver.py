@@ -24,7 +24,7 @@ class XlsxSaver:
         print(buildings_data.head(1).to_dict())
         try:
             df = pd.concat([self.df, buildings_data])
-            df.set_index(['name', 'location']).to_excel(self.file_name)
+            df.set_index('id').to_excel(self.file_name)
         except Exception as e:
             print("ERROR ---- BEGIN")
             print(traceback.format_exc())

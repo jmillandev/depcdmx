@@ -68,7 +68,7 @@ class Scraper(BaseScraper):
             'resolve_element': lambda element: element,
             'attribute': 'data-land_size'
         },
-        'sku': {
+        'id': {
             'resolve_element': lambda element: element,
             'attribute': 'data-sku'
         },

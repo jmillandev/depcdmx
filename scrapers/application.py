@@ -46,7 +46,7 @@ class Entrypoint:
 
     @property
     def safer(self):
-        if not self._safer:
+        if self._safer is None:
             host = search(self.HOST_REGEX, self.base_url).group('host')
             self._safer = XlsxSaver(host, self.state, self.operation)
         return self._safer
