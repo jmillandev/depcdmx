@@ -9,7 +9,6 @@ class XlsxSaver:
     def __init__(self, base_name, state, operation) -> None:
         self.folter_name = f"data/{date.today().isoformat()}"
         self.file_name = f"{self.folter_name}/{base_name}-{state}-{operation}.xlsx"
-        self._df = None
 
     def save(self, buildings_data: list):
         """ Append page data
@@ -21,11 +20,9 @@ class XlsxSaver:
         """
         self.create_folder()
         buildings_data = pd.DataFrame(buildings_data)
-        print(buildings_data.head(1).to_dict())
         try:
-            df = pd.concat([self.df, buildings_data])
-            df.set_index('id').to_excel(self.file_name)
-        except Exception as e:
+            pd.concat([self.df, buildings_data]).set_index('id').to_excel(self.file_name)
+        except Exception:
             print("ERROR ---- BEGIN")
             print(traceback.format_exc())
             print("ERROR ---- END")
@@ -42,12 +39,7 @@ class XlsxSaver:
 
     @property
     def df(self):
-        if self._df is not None:
-            return self._df
-
         try:
-            self._df = pd.read_excel(self.file_name)
+            return pd.read_excel(self.file_name)
         except FileNotFoundError:
-            self._df = pd.DataFrame()
-
-        return self._df
+            return pd.DataFrame()

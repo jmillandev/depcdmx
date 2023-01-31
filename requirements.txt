@@ -8,3 +8,6 @@ beautifulsoup4==4.6.0
 
 # Handlers xlsx
 openpyxl==3.0.10
+
+# NoteBook on VSCode
+ipykernel==6.21.0

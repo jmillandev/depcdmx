@@ -7,12 +7,12 @@ from re import search
 class Entrypoint:
     HOST_REGEX = r':\/\/(\w+\.)?(?P<host>\w+)(\.\w+)'
 
-    def __init__(self, state, operation, base_url, scraper_class) -> None:
+    def __init__(self, state, operation, base_url, scraper_class, page_number=1) -> None:
         self.base_url = base_url
         self.state = state
         self.operation = operation
         self.Scraper = scraper_class
-        self.page_number = 1
+        self.page_number = page_number
         self._safer = None
 
     def start(self):
