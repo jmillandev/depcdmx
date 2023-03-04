@@ -8,7 +8,7 @@ class XlsxSaver:
 
     def __init__(self, base_name, state, operation) -> None:
         self.folter_name = f"data/{date.today().isoformat()}"
-        self.file_name = f"{self.folter_name}/{base_name}-{state}-{operation}.xlsx"
+        self.file_name = f"{self.folter_name}/{base_name}-{state.replace('/', '-')}-{operation}.xlsx"
 
     def save(self, buildings_data: list):
         """ Append page data
